@@ -1,0 +1,73 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "brcm,bcm2835";
+
+	fragment@0 {
+		target = <&spi0>;
+		__overlay__ {
+			status = "okay";
+
+			spidev@0{
+				status = "disabled";
+			};
+
+			spidev@1{
+				status = "disabled";
+			};
+		};
+	};
+
+    fragment@1 {
+		target = <&gpio>;
+		__overlay__ {
+			kedei62_pins: kedei62_pins {
+				brcm,pins = <25>;
+				brcm,function = <0>; //in
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <&spi0>;
+		__overlay__ {
+			/* needed to avoid dtc warning */
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			kedei62: kedei62@1{
+				compatible = "kedei62";
+				reg = <1>;
+
+				spi-max-frequency = <39000000>;
+				rotate = <0>;
+				bgr;
+				fps = <1>;
+				buswidth = <8>;
+				regwidth = <8>;
+				debug = <0>;
+			};
+
+			kedei62-ts@0 {
+				compatible = "ti,ads7846";
+				reg = <0>;
+
+				spi-max-frequency = <2000000>;
+				interrupts = <25 2>; // high-to-low edge triggered
+				interrupt-parent = <&gpio>;
+				pendown-gpio = <&gpio 25 0>;
+				ti,x-plate-ohms = /bits/ 16 <60>;
+				ti,pressure-max = /bits/ 16 <255>;
+			};
+
+		};
+	};
+	__overrides__ {
+		speed =		<&kedei62>,"spi-max-frequency:0";
+		rotate =	<&kedei62>,"rotate:0";
+		fps =		<&kedei62>,"fps:0";
+		debug =		<&kedei62>,"debug:0";
+	};
+
+};
